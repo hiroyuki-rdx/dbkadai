@@ -94,8 +94,15 @@ class DBManager:
         # psycopg2は複文実行を保証しないため、単純に;で分割して順次実行
         statements = [s.strip() for s in sql_text.split(";")]
         for stmt in statements:
-            if not stmt or stmt.startswith("--"):
+            if not stmt:
                 continue
+            
+            # コメント行を除外して、有効なSQLが含まれているか確認
+            # (以前は stmt.startswith("--") で弾いていたため、コメントから始まる有効なSQLもスキップされていた)
+            lines = [line for line in stmt.splitlines() if not line.strip().startswith("--")]
+            if not "".join(lines).strip():
+                continue
+
             cur.execute(stmt)
 
     def _ph(self, sql: str) -> str:
