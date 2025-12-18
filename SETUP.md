@@ -5,12 +5,12 @@
 
 ## 1. ソースコードの取得
 
-作業用ディレクトリ（例: `~/dbprog/`）を作成し、そこにリポジトリをクローンします。
+作業用ディレクトリ（例: `~/dbprog01/`）を作成し、そこにリポジトリをクローンします。
 
 ```bash
 # 作業用ディレクトリの作成と移動
-mkdir -p ~/dbprog
-cd ~/dbprog
+mkdir -p ~/dbprog01
+cd ~/dbprog01
 
 # gitがインストールされていない場合はインストール
 sudo apt update
@@ -74,7 +74,7 @@ PGPASSWORD=ryukoku psql -h localhost -U dbprog01 -d testraiddb
 
 ```bash
 # 1. リポジトリのディレクトリに移動
-cd ~/dbprog/dbkadai
+cd ~/dbprog01/dbkadai
 
 # 2. 最新の変更を取得
 git pull
