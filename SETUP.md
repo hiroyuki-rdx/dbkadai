@@ -24,45 +24,7 @@ cd dbkadai
 code .
 ```
 
-## 2. データベースの準備
-
-PostgreSQLを使用してデータベースを構築します。
-
-1.  PostgreSQLにログインします。
-    （パスワードを求められたら `ryukoku` と入力してください）
-
-    ```bash
-    sudo -u postgres psql
-    ```
-
-2.  `postgres=#` というプロンプトが表示されたら、以下のSQLを**そのままコピー＆ペースト**して実行してください。
-    （これにより、古いデータがあれば消去され、新しい `testraiddb` が作成されます）
-
-    ```sql
-    -- データベース 'testraiddb' があれば削除してリセット（ユーザーは削除しません）
-    DROP DATABASE IF EXISTS testraiddb;
-
-    -- ユーザー 'dbprog' を作成
-    -- ※「role "dbprog" already exists」というエラーが出ても無視して構いません
-    CREATE USER dbprog WITH PASSWORD 'ryukoku';
-    
-    -- 念のためパスワードを確実に設定
-    ALTER USER dbprog WITH PASSWORD 'ryukoku';
-
-    -- データベース 'testraiddb' を作成（所有者を dbprog に設定）
-    CREATE DATABASE testraiddb OWNER dbprog;
-
-    -- 念のため権限を付与
-    GRANT ALL PRIVILEGES ON DATABASE testraiddb TO dbprog;
-    ```
-
-3.  エラーが出なければ、`\q` と入力して `psql` を終了します。
-
-    ```sql
-    \q
-    ```
-
-## 3. Python仮想環境の準備
+## 2. Python仮想環境の準備
 
 授業等で指定された `rsl_base` 環境を使用します。
 
@@ -73,6 +35,18 @@ source ~/venv/rsl_base/bin/activate
 # 2. 依存パッケージのインストール (初回のみ)
 pip install -r requirements.txt
 ```
+
+## 3. データベースの準備
+
+付属のPythonスクリプトを使用して、データベースを自動構築します。
+
+```bash
+# データベースセットアップスクリプトの実行
+python3 setup_db.py
+```
+
+※ 実行中にパスワードを求められた場合は、Linuxのログインパスワードを入力してください。
+※ `✅ データベースのセットアップが完了しました！` と表示されれば成功です。
 
 ## 4. ゲームの実行
 
