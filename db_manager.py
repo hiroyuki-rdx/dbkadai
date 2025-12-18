@@ -315,7 +315,9 @@ class DBManager:
         conn = self.get_connection()
         with self._cursor() as cur:
             cur.execute("SELECT player_id, player_name, score FROM players ORDER BY score DESC")
-            return cur.fetchall()
+            rows = cur.fetchall()
+        conn.commit()
+        return rows
 
     def get_player_skills(self, player_id):
         conn = self.get_connection()
@@ -331,7 +333,9 @@ class DBManager:
                 ),
                 (player_id,),
             )
-            return cur.fetchall()
+            rows = cur.fetchall()
+        conn.commit()
+        return rows
 
     def get_learnable_skills(self, player_id):
         conn = self.get_connection()
@@ -348,7 +352,9 @@ class DBManager:
                 ),
                 (player_id,),
             )
-            return cur.fetchall()
+            rows = cur.fetchall()
+        conn.commit()
+        return rows
 
     def learn_skill(self, player_id, skill_id):
         conn = self.get_connection()
@@ -357,12 +363,15 @@ class DBManager:
         conn.commit()
 
     def get_item_id_by_name(self, item_name):
+        conn = self.get_connection()
         with self._cursor() as cur:
             cur.execute(self._ph("SELECT item_id FROM items WHERE item_name = %s LIMIT 1"), (item_name,))
             row = cur.fetchone()
-            return row[0] if row else None
+        conn.commit()
+        return row[0] if row else None
 
     def has_item_effect(self, player_id, effect_type):
+        conn = self.get_connection()
         with self._cursor() as cur:
             cur.execute(
                 self._ph(
@@ -376,7 +385,9 @@ class DBManager:
                 ),
                 (player_id, effect_type),
             )
-            return cur.fetchone() is not None
+            result = cur.fetchone() is not None
+        conn.commit()
+        return result
 
     def add_item(self, player_id, item_id):
         conn = self.get_connection()
@@ -408,7 +419,9 @@ class DBManager:
                 args.append(f"{effect_filter}%")
             
             cur.execute(self._ph(sql), tuple(args))
-            return cur.fetchall()
+            rows = cur.fetchall()
+        conn.commit()
+        return rows
 
     def consume_item(self, player_id, item_id):
         conn = self.get_connection()
@@ -424,27 +437,36 @@ class DBManager:
         with self._cursor() as cur:
             # 安全のためパラメータ化クエリを使用
             cur.execute(self._ph("SELECT item_id, item_name, rarity FROM items WHERE effect_type LIKE %s"), (f"{type_prefix}%",))
-            return cur.fetchall()
+            rows = cur.fetchall()
+        conn.commit()
+        return rows
 
     # --- PvPSystem用（生SQLをDBManagerに寄せる） ---
     def get_pvp_participants_raw(self):
+        conn = self.get_connection()
         with self._cursor() as cur:
             cur.execute(
                 "SELECT player_id, player_name, hp, agility, status_effect, status_turn, exp, mp, score, bounty FROM players WHERE hp > 0"
             )
-            return cur.fetchall()
+            rows = cur.fetchall()
+        conn.commit()
+        return rows
 
     def get_player_status_row(self, player_id):
+        conn = self.get_connection()
         with self._cursor() as cur:
             cur.execute(self._ph("SELECT hp, status_effect, status_turn FROM players WHERE player_id=%s"), (player_id,))
             row = cur.fetchone()
-            return row if row else (0, None, 0)
+        conn.commit()
+        return row if row else (0, None, 0)
 
     def get_player_bounty(self, player_id):
+        conn = self.get_connection()
         with self._cursor() as cur:
             cur.execute(self._ph("SELECT bounty FROM players WHERE player_id=%s"), (player_id,))
             row = cur.fetchone()
-            return row[0] if row else 0
+        conn.commit()
+        return row[0] if row else 0
 
     def update_player_effect(self, player_id, hp, eff, turn):
         conn = self.get_connection()
@@ -477,16 +499,20 @@ class DBManager:
         conn.commit()
 
     def get_enemies_list(self, my_id, allow_stealth=False):
+        conn = self.get_connection()
         with self._cursor() as cur:
             sql = "SELECT player_id, player_name, hp, status_effect FROM players WHERE hp > 0 AND player_id != %s"
             if not allow_stealth:
                 sql += " AND (status_effect IS NULL OR status_effect != '隠密')"
             cur.execute(self._ph(sql), (my_id,))
             rows = cur.fetchall()
+        conn.commit()
         return [{'id': r[0], 'name': r[1], 'hp': r[2], 'effect': r[3]} for r in rows]
 
     def get_player_name(self, player_id):
+        conn = self.get_connection()
         with self._cursor() as cur:
             cur.execute(self._ph("SELECT player_name FROM players WHERE player_id=%s"), (player_id,))
             row = cur.fetchone()
-            return row[0] if row else "?"
+        conn.commit()
+        return row[0] if row else "?"
