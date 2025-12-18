@@ -67,3 +67,21 @@ python3 main.py
 ```bash
 PGPASSWORD=ryukoku psql -h localhost -U dbprog -d testraiddb
 ```
+
+## 5. 最新のコードを取得する場合 (git pull)
+
+他のメンバーがコードを更新した場合、以下のコマンドで自分の環境に取り込むことができます。
+
+```bash
+# 1. リポジトリのディレクトリに移動
+cd ~/dbprog/dbkadai
+
+# 2. 最新の変更を取得
+git pull
+
+# 3. 必要であれば依存パッケージを更新
+pip install -r requirements.txt
+
+# 4. データベース構造に変更がある場合は再セットアップ（データは消えます）
+# python3 setup_db.py
+```
