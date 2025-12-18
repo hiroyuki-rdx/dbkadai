@@ -402,9 +402,12 @@ class DBManager:
                 JOIN player_items pi ON i.item_id = pi.item_id
                 WHERE pi.player_id = %s AND pi.quantity > 0
             """
+            args = [player_id]
             if effect_filter:
-                sql += f" AND i.effect_type LIKE '{effect_filter}%'"
-            cur.execute(self._ph(sql), (player_id,))
+                sql += " AND i.effect_type LIKE %s"
+                args.append(f"{effect_filter}%")
+            
+            cur.execute(self._ph(sql), tuple(args))
             return cur.fetchall()
 
     def consume_item(self, player_id, item_id):
@@ -419,7 +422,8 @@ class DBManager:
     def get_items_by_type(self, type_prefix):
         conn = self.get_connection()
         with self._cursor() as cur:
-            cur.execute(f"SELECT item_id, item_name, rarity FROM items WHERE effect_type LIKE '{type_prefix}%'")
+            # 安全のためパラメータ化クエリを使用
+            cur.execute(self._ph("SELECT item_id, item_name, rarity FROM items WHERE effect_type LIKE %s"), (f"{type_prefix}%",))
             return cur.fetchall()
 
     # --- PvPSystem用（生SQLをDBManagerに寄せる） ---
