@@ -2,7 +2,7 @@
 DB_CONFIG = {
     'host': 'localhost',
     'dbname': 'testraiddb',
-    'user': 'dbprog',
+    'user': 'dbprog01',
     'password': 'ryukoku',
     'port': '5432'
 }

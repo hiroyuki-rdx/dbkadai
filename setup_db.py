@@ -26,10 +26,10 @@ def run_setup():
     BEGIN
        IF NOT EXISTS (
           SELECT FROM pg_catalog.pg_roles
-          WHERE  rolname = 'dbprog') THEN
-          CREATE ROLE dbprog LOGIN PASSWORD 'ryukoku';
+          WHERE  rolname = 'dbprog01') THEN
+          CREATE ROLE dbprog01 LOGIN PASSWORD 'ryukoku';
        ELSE
-          ALTER ROLE dbprog WITH PASSWORD 'ryukoku';
+          ALTER ROLE dbprog01 WITH PASSWORD 'ryukoku';
        END IF;
     END
     $do$;
@@ -37,13 +37,13 @@ def run_setup():
 
     # 2. DB作成
     db_sql = """
-    CREATE DATABASE testraiddb OWNER dbprog;
-    GRANT ALL PRIVILEGES ON DATABASE testraiddb TO dbprog;
+    CREATE DATABASE testraiddb OWNER dbprog01;
+    GRANT ALL PRIVILEGES ON DATABASE testraiddb TO dbprog01;
     """
 
     try:
         # ユーザー作成・設定
-        print("\n--- ユーザー設定 (dbprog) ---")
+        print("\n--- ユーザー設定 (dbprog01) ---")
         run_psql(user_sql)
 
         # DB作成
@@ -51,7 +51,7 @@ def run_setup():
         run_psql(db_sql)
 
         print("\n✅ データベースのセットアップが完了しました！")
-        print("   User: dbprog")
+        print("   User: dbprog01")
         print("   Pass: ryukoku")
         print("   DB  : testraiddb")
 

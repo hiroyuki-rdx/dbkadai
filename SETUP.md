@@ -65,7 +65,7 @@ python3 main.py
 ゲームのデータを確認したいときは、以下のコマンドで接続できます。
 
 ```bash
-PGPASSWORD=ryukoku psql -h localhost -U dbprog -d testraiddb
+PGPASSWORD=ryukoku psql -h localhost -U dbprog01 -d testraiddb
 ```
 
 ## 5. 最新のコードを取得する場合 (git pull)
