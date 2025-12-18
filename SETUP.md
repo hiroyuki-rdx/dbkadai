@@ -64,30 +64,13 @@ PostgreSQLを使用してデータベースを構築します。
 
 ## 3. Python仮想環境の準備
 
-### A. 既存の環境 (rsl_base) を使用する場合
-
-授業等で指定された `rsl_base` 環境がある場合は、それを使用できます。
+授業等で指定された `rsl_base` 環境を使用します。
 
 ```bash
 # 1. 仮想環境の有効化
 source ~/venv/rsl_base/bin/activate
 
 # 2. 依存パッケージのインストール (初回のみ)
-pip install -r requirements.txt
-```
-
-### B. 新しく環境を作成する場合
-
-個別に環境を作成したい場合は、以下の手順で行います。
-
-```bash
-# 1. 仮想環境 (.venv) の作成
-python3 -m venv .venv
-
-# 2. 仮想環境の有効化
-source .venv/bin/activate
-
-# 3. 依存パッケージのインストール
 pip install -r requirements.txt
 ```
 
