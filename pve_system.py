@@ -48,8 +48,8 @@ class PvESystem:
 
             print(f"\n--- Turn {turn_count} (生存: {living}人) ---")
 
-            # agilityで行動順（固定ステータス）
-            turn_order = sorted(chosen, key=lambda x: x[3], reverse=True)
+            # agilityで行動順（固定ステータス）。同値ならIDが小さい順
+            turn_order = sorted(chosen, key=lambda x: (x[3], -x[0]), reverse=True)
 
             for p_data in turn_order:
                 pid, name, _, agi, _, _, exp, _, _, _ = p_data

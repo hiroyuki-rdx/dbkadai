@@ -58,7 +58,8 @@ class PvPSystem:
 
             print(f"\n--- Turn {turn_count} (生存: {living_count}人) ---")
             
-            turn_order = sorted(participants_data, key=lambda x: x[3] + stat_map[x[0]]['spd'], reverse=True)
+            # Agilityが高い順、同値ならIDが小さい順（プレイヤー優先）
+            turn_order = sorted(participants_data, key=lambda x: (x[3] + stat_map[x[0]]['spd'], -x[0]), reverse=True)
 
             for p_data in turn_order:
                 actor_id, actor_name, actor_exp = p_data[0], p_data[1], p_data[6]
