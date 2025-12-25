@@ -2,7 +2,7 @@
 import random
 from pve_system import PvESystem
 from pvp_system import PvPSystem
-from config import GAME_LOOP_COUNT
+from config import GAME_LOOP_COUNT, LEVEL_UP_EXP
 from utils import safe_input
 
 class GameManager:
@@ -89,13 +89,16 @@ class GameManager:
                 print(f"  {l_name} に支援物資が送られました。")
 
     def _full_recovery(self):
+        # 全プレイヤーを全回復（次のPvE/PvPに全員が参加できるようにする）
+        self.db.full_recover_all_players(LEVEL_UP_EXP)
+
+        # 手元のプレイヤーオブジェクトも同期
         max_hp = 100 + (self.player.level * 10)
         self.player.hp = max_hp
         self.player.mp = 50
         self.player.status_effect = None
         self.player.status_turn = 0
-        print(f"(HP/MP/状態異常 回復 - MaxHP:{max_hp})")
-        self.db.update_player_status(self.player.id, max_hp, 50, self.player.exp, None, 0)
+        print(f"(全員回復: HP/MP/状態異常 - MaxHP:{max_hp})")
 
     def _show_ranking(self):
         print("\n📊 暫定順位")

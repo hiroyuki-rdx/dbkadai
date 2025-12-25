@@ -49,6 +49,8 @@ class PvPSystem:
             if pid == self.player.id and p_items: print("")
 
         dead_record = []
+        # 懸賞金（賞金首）討伐ボーナスはここに集計し、順位ポイント付与時に“勝ち残り順を崩さない範囲で”加算する
+        bounty_bonus = {}
         turn_count = 0
         
         while True:
@@ -103,9 +105,17 @@ class PvPSystem:
                 else:
                     self._manual_turn(actor_id, actor_name, final_atk, hp, stat_map, is_me=False)
                 
-                self._check_deaths_and_bounty(battle_id, actor_id, actor_name, participants_data, dead_record, stat_map)
-        
-            self._calculate_score_and_update_bounty(battle_id, participants_data, dead_record, stat_map[self.player.id]['score_rate'], round_number)
+                self._check_deaths_and_bounty(actor_id, actor_name, participants_data, dead_record, stat_map, bounty_bonus)
+
+        # バトルが完全に終了したタイミングで1回だけスコアを確定・加算する
+        self._calculate_score_and_update_bounty(
+            battle_id,
+            participants_data,
+            dead_record,
+            stat_map[self.player.id]['score_rate'],
+            round_number,
+            bounty_bonus,
+        )
 
     def _get_participants_raw(self):
         return self.db.get_pvp_participants_raw()
@@ -117,7 +127,7 @@ class PvPSystem:
             if hp > 0: count += 1
         return count
 
-    def _check_deaths_and_bounty(self, battle_id, attacker_id, attacker_name, participants, dead_record, stat_map):
+    def _check_deaths_and_bounty(self, attacker_id, attacker_name, participants, dead_record, stat_map, bounty_bonus):
         for p in participants:
             pid = p[0]
             if pid in dead_record: continue
@@ -131,7 +141,7 @@ class PvPSystem:
                 target_bounty = stat_map[pid]['bounty']
                 if target_bounty > 0:
                     print(f"💰 {attacker_name} が賞金首 {target_name} を討ち取った！ (+{target_bounty}pt)")
-                    self.db.register_pvp_result(battle_id, attacker_id, target_bounty)
+                    bounty_bonus[attacker_id] = bounty_bonus.get(attacker_id, 0) + int(target_bounty)
 
     def _manual_turn(self, pid, name, atk, hp, stat_map, is_me=False):
         # 自分のMPはself.player.mpで持っているが、他人のMPはDBから取る必要がある
@@ -211,6 +221,13 @@ class PvPSystem:
             s_name, s_mp, s_power, _ = selected_skill[1], selected_skill[2], selected_skill[3], selected_skill[5]
             if current_mp < s_mp:
                 print(f"  MP不足！{name} は通常攻撃を行います。")
+                # 直前の行動が全体攻撃などでtarget未選択のケースがあるため、通常攻撃用に対象を確保する
+                if target is None:
+                    fallback_enemies = enemies if enemies is not None else self._get_enemies_list(pid, allow_stealth=False)
+                    if not fallback_enemies:
+                        print("  (攻撃できる相手がいません...)")
+                        return
+                    target = fallback_enemies[0]
                 damage = int(atk * random.uniform(0.9, 1.1))
                 print(f"  ⚔️ {name} の通常攻撃 -> {target['name']} (威力:{damage})")
             else:
@@ -281,7 +298,7 @@ class PvPSystem:
         # 廃止されたが、念のため残すか、あるいは削除
         pass
 
-    def _calculate_score_and_update_bounty(self, battle_id, participants, dead_record, my_multiplier, round_number):
+    def _calculate_score_and_update_bounty(self, battle_id, participants, dead_record, my_multiplier, round_number, bounty_bonus):
         rank_order = list(dead_record)
         for p in participants:
             if p[0] not in rank_order:
@@ -301,6 +318,7 @@ class PvPSystem:
         # 1位から順に表示するために逆順にする
         display_order = list(reversed(rank_order))
 
+        prev_awarded = None
         for i, pid in enumerate(display_order):
             rank = i + 1
             
@@ -316,10 +334,25 @@ class PvPSystem:
                 final_pt = int(pt * my_multiplier)
                 if my_multiplier > 1.0:
                     item_effect_msg = f" (アイテム効果 x{int(my_multiplier)})"
+
+            # 懸賞金討伐ボーナスを加算（ただし“勝ち残り順のスコア序列”を崩さないように調整）
+            bonus = int(bounty_bonus.get(pid, 0))
+            bonus_msg = ""
+            if bonus > 0:
+                adjusted = bonus
+                if prev_awarded is not None:
+                    # 上位の付与ポイントを超えない（同点まで許可）
+                    adjusted = min(adjusted, max(0, prev_awarded - final_pt))
+                if adjusted > 0:
+                    final_pt += adjusted
+                    bonus_msg = f" +賞金{adjusted}pt"
+                else:
+                    bonus_msg = " (賞金ptは順位維持のため加算なし)"
             
             p_name = self._get_name(pid)
-            print(f"  {rank}位: {p_name} (+{final_pt}pt){item_effect_msg}")
+            print(f"  {rank}位: {p_name} (+{final_pt}pt{bonus_msg}){item_effect_msg}")
             self.db.register_pvp_result(battle_id, pid, final_pt)
+            prev_awarded = final_pt
 
             if pid == survivor_id:
                 current = self._get_bounty(pid)

@@ -516,3 +516,28 @@ class DBManager:
             row = cur.fetchone()
         conn.commit()
         return row[0] if row else "?"
+
+    # --- ゲーム進行用ユーティリティ ---
+    def full_recover_all_players(self, level_up_exp: int, base_hp: int = 100, hp_per_level: int = 10, base_mp: int = 50):
+        """
+        全プレイヤーを全回復する（HP/MP最大 + 状態異常リセット）。
+        - レベルは exp から算出: level = (exp // level_up_exp) + 1
+        - 最大HP: base_hp + level * hp_per_level
+        """
+        conn = self.get_connection()
+        with self._cursor() as cur:
+            cur.execute("SELECT player_id, exp FROM players")
+            rows = cur.fetchall() or []
+
+            # 少人数前提なのでPython側で計算して一括更新する（DB差異回避）
+            updates = []
+            for pid, exp in rows:
+                lvl = (int(exp) // int(level_up_exp)) + 1
+                max_hp = int(base_hp) + (lvl * int(hp_per_level))
+                updates.append((max_hp, int(base_mp), None, 0, pid))
+
+            cur.executemany(
+                self._ph("UPDATE players SET hp=%s, mp=%s, status_effect=%s, status_turn=%s WHERE player_id=%s"),
+                updates,
+            )
+        conn.commit()
